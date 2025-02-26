@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service History</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Table Styling */
+        .custom-table {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .custom-table th {
+            background-color: #007bff;
+            color: white;
+            text-align: center;
+        }
+
+        .custom-table tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .custom-table tbody tr:hover {
+            background-color: #e9ecef;
+            transition: 0.3s;
+        }
+
+        .status-dropdown {
+            border-radius: 5px;
+            padding: 5px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <div class="container mt-5">
+        <h2 class="text-center mb-4"><a href="AddServics.html" class="btn btn-info mx-5">Add New</a> My Services  <a href="userOrder.html" class="btn btn-secondary mx-5">Service Booking</a> </h2>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover custom-table">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Price</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="serviceTableBody">
+                    <!-- Data will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</body>
+</html>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", async function () {
+    const serviceTableBody = document.getElementById("serviceTableBody");
+
+    async function fetchServices() {
+        try {
+            const response = await fetch("https://localhost:7259/api/Admin/GetServices");
+            const services = await response.json();
+
+            serviceTableBody.innerHTML = ""; // Clear table
+
+            services.forEach(service => {
+                const row = document.createElement("tr");
+
+                row.innerHTML = `
+                    <td>${service.id}</td>
+                    <td>${service.name}</td>
+                    <td>${service.description}</td>
+                    <td>${service.price}</td>
+                    <td>${service.duration}</td>
+                    <td>${service.isApproved ? "Approved" : "Pending"}</td>
+                    <td>
+                        <select class="status-dropdown" data-id="${service.id}">
+                            <option value="true" ${service.isApproved ? "selected" : ""}>Approve</option>
+                            <option value="false" ${!service.isApproved ? "selected" : ""}>Reject</option>
+                        </select>
+                    </td>
+                `;
+
+                serviceTableBody.appendChild(row);
+            });
+
+            attachEventListeners(); // Attach event listeners after rendering
+        } catch (error) {
+            console.error("Error fetching services:", error);
+        }
+    }
+
+    // 🟡 Update service status
+    async function updateServiceStatus(serviceId, isApproved) {
+        try {
+            const response = await fetch(`https://localhost:7259/api/Admin/services/${serviceId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ isApproved: isApproved })
+            });
+
+            if (response.ok) {
+                console.log(`Service ${serviceId} status updated.`);
+                fetchServices(); // Refresh the table
+            } else {
+                console.error("Failed to update status.");
+            }
+        } catch (error) {
+            console.error("Error updating service:", error);
+        }
+    }
+
+    //  Attach event listeners to dropdowns
+    function attachEventListeners() {
+        document.querySelectorAll(".status-dropdown").forEach(dropdown => {
+            dropdown.addEventListener("change", function () {
+                const serviceId = this.getAttribute("data-id");
+                const isApproved = this.value === "true"; // Convert to boolean
+                updateServiceStatus(serviceId, isApproved);
+            });
+        });
+    }
+
+    // Initial fetch
+    fetchServices();
+});
+
+</script>
