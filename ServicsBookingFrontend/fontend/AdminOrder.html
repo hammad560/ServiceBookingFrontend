@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Bookings</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Table Styling */
+        .custom-table {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .custom-table th {
+            background-color: #007bff;
+            color: white;
+            text-align: center;
+        }
+
+        .custom-table tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .custom-table tbody tr:hover {
+            background-color: #e9ecef;
+            transition: 0.3s;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">Admin Panel</h2>
+        <h2 class="text-center mb-4">Booked Services</h2>
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped custom-table">
+                <thead>
+                    <tr>
+                        <th>Booking ID</th>
+                        <th>User Name</th>
+                        <th>Service Name</th>
+                        <th>Booking Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="orderTableBody">
+                    <!-- API Data Insert -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+<script>
+    // Correct ID for Table Body
+    let tableBody = document.getElementById("orderTableBody");
+
+    fetch("https://localhost:7259/api/Admin/ServiceBookings") 
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        data.forEach(order => {
+            let row = `<tr>
+                <td>${order.id || "N/A"}</td>
+                <td>${order.Name || "N/A"}</td>
+                <td>${order.Name|| "N/A"}</td>
+                <td>${order.bookingDate ? new Date(order.bookingDate).toLocaleDateString() : "N/A"}</td>
+                <td>${order.status || "Pending"}</td>
+            </tr>`;
+            tableBody.innerHTML += row;
+        });
+    })
+    .catch(error => console.error("Error fetching data:", error));
+</script>
+
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service History</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .custom-table {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .custom-table th {
+            background-color: #007bff;
+            color: white;
+            text-align: center;
+        }
+        .custom-table tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        .custom-table tbody tr:hover {
+            background-color: #e9ecef;
+            transition: 0.3s;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">Available Services <a href="userOrder.html" class="btn btn-secondary mx-5">Booking History</a></h2>
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped custom-table">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Service Name</th>
+                        <th>Description</th>
+                        <th>Price</th>
+                        <th>Duration</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="serviceTableBody">
+                    <!-- API data insert -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            fetchServices();
+        });
+
+        function fetchServices() {
+            fetch("https://localhost:7259/api/User")
+                .then(response => response.json())
+                .then(data => {
+                    let tableBody = document.getElementById("serviceTableBody");
+                    tableBody.innerHTML = "";
+
+                    data.forEach(service => {
+                        let row = `<tr>
+                            <td>${service.name}</td>
+                            <td>${service.description}</td>
+                            <td>${service.price}</td>
+                            <td>${service.duration}</td>
+                            <td>
+                                <button class="btn btn-primary" onclick="bookService(${service.id})">
+                                    Book Now
+                                </button>
+                            </td>
+                        </tr>`;
+                        tableBody.innerHTML += row;
+                    });
+                })
+                .catch(error => console.error("Error fetching services:", error));
+        }
+
+        function bookService(serviceId) {
+            let userId = 2; // Replace with actual logged-in user ID
+
+            let bookingData = {
+                userId: userId,
+                serviceId: serviceId,
+                bookingDate: new Date().toISOString(), // Current date and time
+                status: "Pending" // Default status
+            };
+
+            fetch("https://localhost:7259/api/User/bookings", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(bookingData)
+            })
+            .then(response => response.json().then(data => ({
+                status: response.status, // HTTP status code
+                body: data // Response body
+            })))
+            .then(res => {
+                if (res.status === 200) {
+                    alert("Service booked successfully!");
+                } else {
+                    console.error("Error booking service:", res.body);
+                    alert("Booking failed: " + (res.body.message || "Unknown error"));
+                }
+            })
+            .catch(error => console.error("Fetch Error:", error));
+        }
+    </script>
+</body>
+</html>
